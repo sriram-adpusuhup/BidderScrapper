@@ -1,4 +1,4 @@
-import couchbase from 'couchbase';
+const couchbase = require('couchbase');
 
 function uniqueNames(names) {
     if (names.length > 1) {
@@ -6,8 +6,7 @@ function uniqueNames(names) {
     }
     return names;
 }
-
-export default class CouchBaseAdapter {
+module.exports = class CouchBaseAdapter {
     constructor(host, port, userName, password, bucketNames = []) {
         const connectionString = `${host}:${port}`;
         this.cluster = new couchbase.Cluster(connectionString);
@@ -24,6 +23,7 @@ export default class CouchBaseAdapter {
                     throw err;
                 }
             });
+            this.buckets[bucketName].operationTimeout = 6000;
         });
     }
 
@@ -34,6 +34,7 @@ export default class CouchBaseAdapter {
 	 * @param {array<any>} params The params to be replaced in the N1QL query
 	 */
     query(bucketName, query, params = []) {
+        console.log(`Running query ${query}`)
         return new Promise((resolve, reject) => {
             if (!query) {
                 return reject({ message: 'Invalid Query' })

@@ -6,7 +6,8 @@
   "dependencies": {
     "axios": "^0.19.2",
     "cheerio": "^1.0.0-rc.3",
-    "couchbase": "^3.0.1",
+    "couchbase": "^2.6.10",
+    "stream-json": "^1.5.0",
     "xml2js": "^0.4.23"
   }
 }

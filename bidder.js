@@ -1,4 +1,3 @@
-const cheerio = require('cheerio');
 const parseString = require('xml2js').parseStringPromise;
 const axios = require('axios');
 
