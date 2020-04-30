@@ -1,35 +1,107 @@
 const parseString = require('xml2js').parseStringPromise;
 const axios = require('axios');
+const allSettled = require('promise.allsettled');
 
 const processXml = async (xml) => {
     const res = await parseString(xml);
-    let adData;
-    if (res.VAST.Ad[0].InLine) {
-        adData = res.VAST.Ad[0].InLine[0];
-    } else {
-        adData = res.VAST.Ad[0].Wrapper[0];
-        // console.log({ data: adData.Creatives[0].Creative[0].Linear[0] })
+    if (res && res.VAST && res.VAST.Ad && res.VAST.Ad[0]) {
+        let adData;
+        if (res.VAST.Ad[0].InLine) {
+            adData = res.VAST.Ad[0].InLine[0];
+        } else {
+            adData = res.VAST.Ad[0].Wrapper[0];
+            // console.log({ data: adData.Creatives[0].Creative[0].Linear[0] })
+        }
+        const Linear = adData.Creatives[0].Creative[0].Linear[0];
+        if (Linear) {
+            const MediaFiles = Linear.MediaFiles && Linear.MediaFiles[0];
+            if (MediaFiles) {
+                const data = MediaFiles.MediaFile && MediaFiles.MediaFile[0]['$'];
+                return {
+                    height: data.height,
+                    width: data.width
+                };
+            }
+        }
     }
-    const data = adData.Creatives[0].Creative[0].Linear[0].MediaFiles[0].MediaFile[0]['$'];
     return {
-        height: data.height,
-        width: data.width
+        height: 'null',
+        width: 'null'
     };
+
+}
+
+const splitLinksIntoChunks = (links = []) => {
+    const CHUNK_SIZE = 500;
+    const chunks = [];
+    const linksSet = [...links];
+    while (linksSet.length) {
+        const subSet = linksSet.splice(0, CHUNK_SIZE);
+        chunks.push(subSet);
+    }
+    return chunks;
+}
+
+const extractBidderDetails = bidder => {
+    const unitCode = bidder.adUnitCode;
+    const parts = unitCode.split('_');
+    let size;
+    if (unitCode.startsWith('STICKY')) {
+        size = parts[3].split('X');
+    } else {
+        size = parts[2].split('X');
+    }
+    return {
+        adUnitWidth: size[0],
+        adUnitHeight: size[1],
+        siteId: bidder.siteId,
+        eCpm: bidder.originalCpm
+    }
 }
 
 const processBidders = async (bidders = []) => {
-    const parseQueries = bidders.map(bidder => {
-        return parseString(bidder.VastBucket.vast);
-    })
-    const responses = await Promise.all(parseQueries);
-    const links = responses.map(res => res.VAST.Ad[0].Wrapper[0].VASTAdTagURI[0]);
-    const axiosCalls = links.map(axios.get);
-    // console.log({ links })
-    const res = await Promise.all(axiosCalls);
-    const promises = res.map(r => processXml(r.data));
+    const filteredBidders = bidders.filter(bidder => !!bidder.vast);
+    // console.log({ bidders, filteredBidders })
+    console.log({ bidders: bidders.length, filter: filteredBidders.length })
+    if (filteredBidders.length === 0) {
+        console.log('No bidders have xml data');
+        return null;
+    }
+    const parseQueries = filteredBidders.map(bidder => {
+        return parseString(bidder.vast);
+    });
 
-    const data = await Promise.all(promises);
-    return data;
+    const adUnitDimensions = filteredBidders.map(extractBidderDetails);
+    const responses = await Promise.all(parseQueries);
+    const links = responses.filter(res => res.VAST && res.VAST.Ad && res.VAST.Ad[0] && res.VAST.Ad[0].Wrapper && res.VAST.Ad[0].Wrapper[0]).map(res => res.VAST.Ad[0].Wrapper[0].VASTAdTagURI[0]);
+
+    const finalSetLinks = splitLinksIntoChunks(links);
+    const results = [];
+
+    for (let finalLinks of finalSetLinks) {
+        console.log('sending api calls');
+        const axiosCalls = finalLinks.map(axios.get);
+        try {
+            const res = await allSettled(axiosCalls);
+            const promises = res.filter(r => r.status === 'fulfilled').map(r => processXml(r.value.data));
+
+            const data = await Promise.all(promises);
+
+            results.push(...data);
+        } catch (e) {
+            console.log({ e });
+        }
+    }
+
+    const finalResults = results.map((result, index) => {
+        const adUnitDimension = adUnitDimensions[index];
+        return {
+            ...result,
+            ...adUnitDimension
+        };
+    })
+
+    return finalResults;
 };
 
 // VAST -> Ad -> Inline -> Creatives
@@ -86,6 +158,6 @@ const oftmedia = {
     "id": "vast::37780:0004e9c3-6c07-45b6-b31c-63c295d3580c"
 };
 
-(async function () {
-    await processBidders([districtm, pubmatic])
-})();
+module.exports = {
+    processBidders
+}

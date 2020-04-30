@@ -1,94 +1,54 @@
-const StreamArray = require('stream-json/streamers/StreamArray');
-const { Writable } = require('stream');
-const fs = require('fs');
-const path = require('path');
-const Couchbase = require('./couchbase');
-const config = require('./config');
-const { couchbase: couchbaseConfig } = config;
-
-const fsParse = () => {
-    const file = fs.readFileSync(path.resolve(__dirname, 'vast.json'));
-    console.log({ len: file.length });
-}
+const mongoose = require('mongoose');
+const ObjectToCsv = require('objects-to-csv');
+const BidderModel = require('./BidderSchema');
+const { processBidders } = require('./bidder');
 
 const main = async () => {
-    const bucketName = config.bucketName;
+    console.log('---- Started -----');
     const bidders = [
         'districtm',
         'pubmatic',
-        // 'oftmedia',
-        // 'rhythmone'
+        'oftmedia',
+        // 'rhythmone',
+        // 'appnexus'
     ];
 
-    const bidderQueryStrings = bidders.map(bidder => {
-        return `SELECT * FROM VastBucket WHERE bidder=${bidder} ORDER BY META().id LIMIT 5`;
-    });
+    for (let bidder of bidders) {
+        console.log(`Processing bidder --- ${bidder} ----`);
 
-    const couchbase = new Couchbase(
-        couchbaseConfig.HOST,
-        couchbaseConfig.PORT,
-        couchbaseConfig.USERNAME,
-        couchbaseConfig.PASSWORD,
-        [bucketName]
-    );
+        const data = await BidderModel.find({ bidder, originalCpm: { $gt: 1.0 } }).sort({ id: 1 }).limit(2000);
 
-    const bidderQueries = bidderQueryStrings.map(query =>
-        couchbase.query(bucketName, query)
-    );
+        if (data.length) {
+            console.log('started processing');
+            const processedData = await processBidders(data);
+            if (processedData) {
+                const csvData = new ObjectToCsv(processedData);
+                await csvData.toDisk(`./${bidder}.csv`);
+            }
+        } else {
+            console.log(`No bidders ${bidder}`)
+        }
 
-    const biddersData = await Promise.all(bidderQueries);
+        console.log(`--- Bidder Processed ----`);
+    }
 
-    console.log({ biddersData });
+    console.log('All done');
 };
 
-const getAndParseData = () => {
-    const data = {
-        districtm: [],
-        pubmatic: [],
-        districtmCount: 0,
-        pubmaticCount: 0
-    };
-    const fileStream = fs.createReadStream(path.resolve(__dirname, 'vast.json'));
-    const jsonStream = StreamArray.withParser();
-    const processingStream = new Writable({
-        write({ key, value }, encoding, callback) {
-            console.log(`${key} processing`);
-            if (data.districtmCount >= 2200 && data.pubmaticCount >= 2200) {
-                console.log('ending');
-                return processingStream.end();
-            }
-            if (value.bidder === 'pubmatic' && data.pubmaticCount <= 2200) {
-                console.log('adding pubmatic');
-                data.pubmatic.push(value);
-                data.pubmaticCount += 1;
-            } else if (value.bidder === 'districtm' && data.districtmCount <= 2200) {
-                console.log('adding districtm')
-                data.districtm.push(value);
-                data.districtmCount += 1;
-            }
-        },
-        //Don't skip this, as we need to operate with objects, not buffers
-        objectMode: true
-    });
-    //Pipe the streams as follows
-    fileStream.pipe(jsonStream.input);
-    jsonStream.pipe(processingStream);
-    //So we're waiting for the 'finish' event when everything is done.
-    processingStream.on('finish', () => {
-        console.log({
-            districtMLen: data.districtm.length,
-            districtmCount: data.districtmCount,
-            pubmaticLen: data.pubmatic.length,
-            pubmaticCount: data.pubmaticCount
-        });
-    });
-}
+const connectToMongo = () => {
+    return mongoose.connect('mongodb://localhost:27017/test', { useNewUrlParser: true })
+};
 
 (async function () {
     try {
-        // await main();
+        connectToMongo()
+            .then(main)
+            .then(() => {
+                process.exit(0)
+            })
+            .catch(console.error);
         // getAndParseData()
-        fsParse()
+
     } catch (e) {
         console.error({ e });
     }
