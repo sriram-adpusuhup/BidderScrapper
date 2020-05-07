@@ -7,8 +7,8 @@ const main = async () => {
     console.log('---- Started -----');
     const bidders = [
         'districtm',
-        'pubmatic',
-        'oftmedia',
+        // 'pubmatic',
+        // 'oftmedia',
         // 'rhythmone',
         // 'appnexus'
     ];
@@ -16,13 +16,25 @@ const main = async () => {
     for (let bidder of bidders) {
         console.log(`Processing bidder --- ${bidder} ----`);
 
-        const data = await BidderModel.find({ bidder, originalCpm: { $gt: 1.0 } }).sort({ id: 1 }).limit(2000);
-
+        const data = await BidderModel
+            .find({ bidder, originalCpm: { $gt: '0.75' } })
+            .sort({ id: 1 })
+            .limit(1000);
+        console.log({ len: data.length })
         if (data.length) {
-            console.log('started processing');
             const processedData = await processBidders(data);
-            if (processedData) {
-                const csvData = new ObjectToCsv(processedData);
+            console.log(processedData.state)
+            const resultsToWrite = processedData.results.map(res => {
+                const bidder = res.bidder;
+                const bidderData = extractBidderDetails(bidder)
+                const data = res.data.data;
+                return {
+                    ...data,
+                    ...bidderData
+                };
+            })
+            if (processedData.results) {
+                const csvData = new ObjectToCsv(resultsToWrite);
                 await csvData.toDisk(`./${bidder}.csv`);
             }
         } else {
@@ -38,6 +50,24 @@ const main = async () => {
 const connectToMongo = () => {
     return mongoose.connect('mongodb://localhost:27017/test', { useNewUrlParser: true })
 };
+
+const extractBidderDetails = bidder => {
+    const unitCode = bidder.adUnitCode;
+    const parts = unitCode.split('_');
+    let size;
+    if (unitCode.startsWith('STICKY')) {
+        size = parts[3].split('X');
+    } else {
+        size = parts[2].split('X');
+    }
+    return {
+        adUnitWidth: size[0],
+        adUnitHeight: size[1],
+        siteId: bidder.siteId,
+        eCpm: bidder.originalCpm,
+        id: bidder.id,
+    }
+}
 
 (async function () {
     try {

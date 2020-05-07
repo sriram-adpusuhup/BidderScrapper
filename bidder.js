@@ -1,5 +1,13 @@
 const parseString = require('xml2js').parseStringPromise;
 const axios = require('axios');
+const ObjectToCsv = require('objects-to-csv');
+
+const States = {
+    SUCCESS: 1,
+    FAILURE: 0,
+    CONTINUE: 3
+};
+
 const allSettled = require('promise.allsettled');
 
 const processXml = async (xml) => {
@@ -10,98 +18,255 @@ const processXml = async (xml) => {
             adData = res.VAST.Ad[0].InLine[0];
         } else {
             adData = res.VAST.Ad[0].Wrapper[0];
-            // console.log({ data: adData.Creatives[0].Creative[0].Linear[0] })
         }
-        const Linear = adData.Creatives[0].Creative[0].Linear[0];
-        if (Linear) {
-            const MediaFiles = Linear.MediaFiles && Linear.MediaFiles[0];
-            if (MediaFiles) {
-                const data = MediaFiles.MediaFile && MediaFiles.MediaFile[0]['$'];
-                return {
-                    height: data.height,
-                    width: data.width
-                };
-            }
+
+        const result = processAdData(adData);
+        return result;
+    }
+    return {
+        state: States.FAILURE
+    };
+}
+
+const processLowestBirateMediaFile = (mediaFiles = []) => {
+    let curHeight = mediaFiles[0].$.height;
+    let curWidth = mediaFiles[0].$.width;
+    let currentLeastBitrate = parseInt(mediaFiles[0].$.bitrate);
+    // console.log('======================================= \n')
+    mediaFiles.forEach(file => {
+        const data = file.$;
+        const height = data.height;
+        const width = data.width;
+        const bitrate = parseInt(data.bitrate);
+        // console.log({ bitrate })
+        if (!!bitrate && bitrate < currentLeastBitrate) {
+            curHeight = height;
+            curWidth = width;
+            currentLeastBitrate = bitrate;
+        }
+    });
+    // console.log({ currentLeastBitrate })
+    // console.log('=========================================== \n');
+    return {
+        height: curHeight || 'null',
+        width: curWidth || 'null',
+        bitrate: currentLeastBitrate
+    }
+}
+
+const processAdData = adData => {
+    const Linear = (
+        adData.Creatives && adData.Creatives[0] && adData.Creatives[0].Creative &&
+        adData.Creatives[0].Creative[0] &&
+        adData.Creatives[0].Creative[0].Linear
+    ) ? adData.Creatives[0].Creative[0].Linear[0] : null;
+    if (Linear) {
+        const MediaFiles = Linear.MediaFiles && Linear.MediaFiles[0];
+        if (MediaFiles) {
+            // console.log({
+            //     mediaFiles: MediaFiles.MediaFile && MediaFiles.MediaFile.length
+            // });
+            return {
+                state: States.SUCCESS,
+                data: processLowestBirateMediaFile(MediaFiles.MediaFile)
+            };
+        } else {
+            console.log('no media files');
+            const nestedUrl = adData.VASTAdTagURI[0];
+            // console.log({ nestedUrl });
+
+            return {
+                state: States.CONTINUE,
+                data: nestedUrl
+            };
         }
     }
     return {
-        height: 'null',
-        width: 'null'
-    };
-
+        state: States.FAILURE
+    }
 }
 
-const splitLinksIntoChunks = (links = []) => {
+const splitPromisesToChunks = (promises = []) => {
     const CHUNK_SIZE = 500;
     const chunks = [];
-    const linksSet = [...links];
-    while (linksSet.length) {
-        const subSet = linksSet.splice(0, CHUNK_SIZE);
+    const promisesSet = [...promises];
+    while (promisesSet.length) {
+        const subSet = promisesSet.splice(0, CHUNK_SIZE);
         chunks.push(subSet);
     }
     return chunks;
 }
 
-const extractBidderDetails = bidder => {
-    const unitCode = bidder.adUnitCode;
-    const parts = unitCode.split('_');
-    let size;
-    if (unitCode.startsWith('STICKY')) {
-        size = parts[3].split('X');
-    } else {
-        size = parts[2].split('X');
-    }
-    return {
-        adUnitWidth: size[0],
-        adUnitHeight: size[1],
-        siteId: bidder.siteId,
-        eCpm: bidder.originalCpm
+const processAWrapper = async wrapper => {
+    const xmlLink = wrapper.xmlData.VAST.Ad[0].Wrapper[0].VASTAdTagURI[0];
+    try {
+        const xmlData = await axios.get(xmlLink);
+        const result = await processXml(xmlData.data);
+
+        return {
+            data: result,
+            bidder: wrapper.bidder
+        };
+    } catch (e) {
+        console.log(`Error calling xml scrape link ${wrapper.bidder.id}`);
+        // console.log({ e });
+        return null;
     }
 }
 
-const processBidders = async (bidders = []) => {
-    const filteredBidders = bidders.filter(bidder => !!bidder.vast);
-    // console.log({ bidders, filteredBidders })
-    console.log({ bidders: bidders.length, filter: filteredBidders.length })
-    if (filteredBidders.length === 0) {
-        console.log('No bidders have xml data');
+const secondLevelParse = async data => {
+    const link = data.data.data;
+    try {
+        const xmlData = await axios.get(link);
+        const processedData = await processXml(xmlData.data);
+        return {
+            data: processedData,
+            bidder: data.bidder
+        };
+    } catch (e) {
+        console.error('error at second level parsing');
+        console.log({ message: e.message });
         return null;
     }
-    const parseQueries = filteredBidders.map(bidder => {
-        return parseString(bidder.vast);
-    });
+}
 
-    const adUnitDimensions = filteredBidders.map(extractBidderDetails);
-    const responses = await Promise.all(parseQueries);
-    const links = responses.filter(res => res.VAST && res.VAST.Ad && res.VAST.Ad[0] && res.VAST.Ad[0].Wrapper && res.VAST.Ad[0].Wrapper[0]).map(res => res.VAST.Ad[0].Wrapper[0].VASTAdTagURI[0]);
+const processSecondLevelParsing = async parseData => {
+    const promises = parseData.map(secondLevelParse);
+    const promisesChunks = splitPromisesToChunks(promises);
 
-    const finalSetLinks = splitLinksIntoChunks(links);
+    const results = [];
+    let noChunks = 0;
+    for (let promiseChunk of promisesChunks) {
+        ++noChunks;
+        console.log(`processing chunk ${noChunks}`);
+        try {
+            const responses = await allSettled(promiseChunk);
+            const successResponses = responses.filter(res => res.status === 'fulfilled' && res.value !== null).map(res => res.value);
+            results.push(...successResponses);
+        } catch (e) {
+            console.log(e.message);
+        }
+    }
+    return results;
+}
+
+const parseWrappers = async (wrappers) => {
+
+    const promises = wrappers.map(processAWrapper);
+    const promisesChunks = splitPromisesToChunks(promises);
+
     const results = [];
 
-    for (let finalLinks of finalSetLinks) {
-        console.log('sending api calls');
-        const axiosCalls = finalLinks.map(axios.get);
+    let noOfChunks = 0;
+    let failedCount = 0;
+    for (let promiseChunk of promisesChunks) {
+        ++noOfChunks;
+        console.log(`processing chunk ${noOfChunks}`);
         try {
-            const res = await allSettled(axiosCalls);
-            const promises = res.filter(r => r.status === 'fulfilled').map(r => processXml(r.value.data));
-
-            const data = await Promise.all(promises);
-
-            results.push(...data);
+            const responses = await allSettled(promiseChunk);
+            const successResponses = responses
+                .filter(res => res.status === 'fulfilled' && res.value !== null)
+                .map(res => res.value);
+            failedCount += responses.filter(res => res.status === 'fulfilled' && res.value === null).length;
+            results.push(...successResponses);
         } catch (e) {
             console.log({ e });
         }
     }
 
-    const finalResults = results.map((result, index) => {
-        const adUnitDimension = adUnitDimensions[index];
-        return {
-            ...result,
-            ...adUnitDimension
-        };
-    })
+    console.log({ failedCount });
 
-    return finalResults;
+    return results;
+}
+
+const parseInlines = inlines => {
+    // return processAdData(inlines[0].VAST.Ad[0].InLine[0]);
+    const xmlResults = inlines.map(inline => processAdData(inline.xmlData.VAST.Ad[0].InLine[0]));
+    return xmlResults.map((res, i) => ({
+        data: res,
+        bidder: inlines[i].bidder
+    }));
+}
+
+const processBidders = async (bidders = []) => {
+    const state = {
+        totalBidders: bidders.length,
+        biddersWithoutVast: 0,
+        noWrapper: 0,
+        noInline: 0,
+        noWrapperOrInline: 0
+    };
+    // filtering our bidders from db without xml
+    const filteredBidders = bidders.filter(bidder => !!bidder.vast);
+    state.biddersWithoutVast += state.totalBidders - filteredBidders.length;
+    if (filteredBidders.length === 0) {
+        console.log('No bidders have xml data');
+        return null;
+    }
+
+    // parsing filtered xml into objects
+    const parseQueries = filteredBidders.map(bidder => {
+        return parseString(bidder.vast);
+    });
+    const responses = await Promise.all(parseQueries);
+
+    // mapping each parsed response with it's respective bidder data from db
+    const responsesWithId = responses.map((res, i) => {
+        const bidder = filteredBidders[i];
+        bidder.vast = null;
+        const xmlData = res;
+        return {
+            bidder,
+            xmlData
+        };
+    });
+
+    // filtering data with valid structure to parse
+    const bidsData = responsesWithId.filter(res => res.xmlData && res.xmlData.VAST && res.xmlData.VAST.Ad && res.xmlData.VAST.Ad[0]);
+
+    // some bids have <Wrapper> 
+    const wrapperData = bidsData.filter(res => res.xmlData.VAST.Ad[0].Wrapper && res.xmlData.VAST.Ad[0].Wrapper[0]);
+    // and some have <Inline>
+    const inlineData = bidsData.filter(res => res.xmlData.VAST.Ad[0].InLine && res.xmlData.VAST.Ad[0].InLine[0]);
+
+    state.noWrapper = wrapperData.length;
+    state.noInline = inlineData.length;
+
+    state.noWrapperOrInline = state.totalBidders - (state.noWrapper + state.noInline);
+
+    // -------- parsing wrappers first -----
+    // <Wrapper> links to a separate xml. Need to query the page and parse it to get dimensions
+    const wrapperResults = await parseWrappers(wrapperData);
+
+    // ------ parsing inlines ------
+    // <InLine> has the dimensions embedded in themselves.
+    console.log('---------- PARSING INLINES ------------')
+    const inlineResults = parseInlines(inlineData);
+
+    console.log({
+        wrapperResults: wrapperResults.length,
+        inlineResults: inlineResults.length
+    });
+
+    const totalResults = [...wrapperResults, ...inlineResults];
+
+    const allSuccess = totalResults.filter(res => res.data.state === States.SUCCESS);
+    // some have two levels of nested link to get and parse. This is the second level. first level is done at this point
+    const allToContinue = totalResults.filter(res => res.data.state === States.CONTINUE);
+    const allFailed = totalResults.filter(res => res.data.state === States.FAILURE);
+
+    console.log('---- PROCESSING SECOND LEVEL ------');
+    const continueResult = await processSecondLevelParsing(allToContinue);
+
+    console.log({
+        success: allSuccess.length,
+        failure: allFailed.length,
+        continue: continueResult.length
+    });
+    return {
+        results: [...allSuccess, ...continueResult],
+        state
+    };
 };
 
 // VAST -> Ad -> Inline -> Creatives
