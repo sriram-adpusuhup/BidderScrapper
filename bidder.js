@@ -71,7 +71,7 @@ const processAdData = adData => {
                 data: processLowestBirateMediaFile(MediaFiles.MediaFile)
             };
         } else {
-            console.log('no media files');
+            // console.log('no media files');
             const nestedUrl = adData.VASTAdTagURI[0];
             // console.log({ nestedUrl });
 
@@ -108,7 +108,7 @@ const processAWrapper = async wrapper => {
             bidder: wrapper.bidder
         };
     } catch (e) {
-        console.log(`Error calling xml scrape link ${wrapper.bidder.id}`);
+        // console.log(`Error calling xml scrape link ${wrapper.bidder.id}`);
         // console.log({ e });
         return null;
     }

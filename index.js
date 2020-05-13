@@ -2,13 +2,14 @@ const mongoose = require('mongoose');
 const ObjectToCsv = require('objects-to-csv');
 const BidderModel = require('./BidderSchema');
 const { processBidders } = require('./bidder');
+const Couchbase = require('./database');
 
 const main = async () => {
     console.log('---- Started -----');
     const bidders = [
         'districtm',
-        // 'pubmatic',
-        // 'oftmedia',
+        'pubmatic',
+        'oftmedia',
         // 'rhythmone',
         // 'appnexus'
     ];
@@ -16,13 +17,16 @@ const main = async () => {
     for (let bidder of bidders) {
         console.log(`Processing bidder --- ${bidder} ----`);
 
-        const data = await BidderModel
-            .find({ bidder, originalCpm: { $gt: '0.75' } })
-            .sort({ id: 1 })
-            .limit(1000);
+        // const data = await BidderModel
+        //     .find({ bidder: bidder, cpm: { $gte: 0.5 } })
+        //     // .sort({ id: 1 })
+        //     .limit(1000);
+        const query = `SELECT * FROM VastBucket WHERE bidder='${bidder}' AND originalCpm > 0.5 ORDER BY requestId ASC LIMIT 5000`;
+        const data = await Couchbase.queryFromAppBucket(query);
         console.log({ len: data.length })
+        const bidders = data.map(d => ({ ...d.VastBucket }));
         if (data.length) {
-            const processedData = await processBidders(data);
+            const processedData = await processBidders(bidders);
             console.log(processedData.state)
             const resultsToWrite = processedData.results.map(res => {
                 const bidder = res.bidder;
@@ -60,25 +64,32 @@ const extractBidderDetails = bidder => {
     } else {
         size = parts[2].split('X');
     }
+    const bidSize = bidder.size.split('x');
     return {
         adUnitWidth: size[0],
         adUnitHeight: size[1],
+        bidWidth: bidSize[0],
+        bidHeight: bidSize[1],
         siteId: bidder.siteId,
         eCpm: bidder.originalCpm,
-        id: bidder.id,
+        id: bidder.requestId,
+        url: bidder.pageUrl,
     }
 }
 
 (async function () {
     try {
-        connectToMongo()
-            .then(main)
-            .then(() => {
-                process.exit(0)
-            })
-            .catch(console.error);
+        // connectToMongo()
+        //     .then(main)
+        //     .then(() => {
+        //         process.exit(0)
+        //     })
+        //     .catch(console.error);
         // getAndParseData()
-
+        Couchbase.connectToAppBucket()
+            .then(main)
+            .then(() => process.exit(0))
+            .catch(console.error);
     } catch (e) {
         console.error({ e });
     }

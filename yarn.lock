@@ -3,9 +3,9 @@
 
 
 "@types/node@*":
-  version "13.13.4"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.13.4.tgz#1581d6c16e3d4803eb079c87d4ac893ee7501c2c"
-  integrity sha512-x26ur3dSXgv5AwKS0lNfbjpCakGIduWU1DU91Zz58ONRWrIKGunmZBNv4P7N+e27sJkiGDsw/3fT4AtsqQBrBA==
+  version "14.0.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.0.1.tgz#5d93e0a099cd0acd5ef3d5bde3c086e1f49ff68c"
+  integrity sha512-FAYBGwC+W6F9+huFIDtn43cpy7+SzG+atzRiTfdp3inUKL2hXnd4rG8hylJLIh4+hqrQy1P17kvJByE/z825hA==
 
 ajv@^6.5.5:
   version "6.12.2"
@@ -252,14 +252,14 @@ core-util-is@1.0.2, core-util-is@~1.0.0:
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
   integrity sha1-tf1UIgqivFq1eqtxQMlAdUUDwac=
 
-couchbase@^2.6.10:
-  version "2.6.11"
-  resolved "https://registry.yarnpkg.com/couchbase/-/couchbase-2.6.11.tgz#640eff955b50669629b6fb0834894a7aeecacaad"
-  integrity sha512-mdGOTl+seTWliwlGds0Lyt9IXKBKp8zZqrbtGEMJFNm+foyCzzEIiYRCBYfbrWVWua6a9mNYFI8bCv/LPWAlFA==
+couchbase@^2.5.1:
+  version "2.6.12"
+  resolved "https://registry.yarnpkg.com/couchbase/-/couchbase-2.6.12.tgz#81beafc4e4a12aba4f84570a078ab26eb3e98206"
+  integrity sha512-507FWxN2M5k8Qor1+v4dnNIeudZ116K508u1ZDRbiF4H+xXlmQtflVNEcpzZKNRGrVZqn/K8qeAt8xtjwC2NrQ==
   dependencies:
     bindings "^1.5.0"
     dev-null "^0.1.1"
-    nan "^2.14.0"
+    nan "^2.14.1"
     prebuild-install "^5.3.3"
     request "^2.88.2"
     winston "^3.2.1"
@@ -285,14 +285,14 @@ csv-generate@^3.2.4:
   integrity sha512-qNM9eqlxd53TWJeGtY1IQPj90b563Zx49eZs8e0uMyEvPgvNVmX1uZDtdzAcflB3PniuH9creAzcFOdyJ9YGvA==
 
 csv-parse@^4.8.8:
-  version "4.9.0"
-  resolved "https://registry.yarnpkg.com/csv-parse/-/csv-parse-4.9.0.tgz#a947c66d8ab31207f4933170064dd8268c511e99"
-  integrity sha512-SaFMvRWzobY9z0Nxg+q5pXvU2JY7p++icb1Bb/ZwGSLv058cLabhGg3YNpLPI2KALtZnoe/oNBCfWX9xgTkcaA==
+  version "4.9.1"
+  resolved "https://registry.yarnpkg.com/csv-parse/-/csv-parse-4.9.1.tgz#96e645520a1c95cbec1ffecb7513ebba61766269"
+  integrity sha512-DSoBx9V5PpAVWZbqqYKaoxYsf6yQdltTlUmZ1gPjvoTeRI5wPDlwa6ovrmeUP/1y4MjUkAPXx17aPlu0E6xBvg==
 
 csv-stringify@^5.3.6:
-  version "5.4.3"
-  resolved "https://registry.yarnpkg.com/csv-stringify/-/csv-stringify-5.4.3.tgz#68f2e59652af7bb27bb06fe05a8237ff95bd13f9"
-  integrity sha512-WJLgRJQcVjPK45jXS1xfnkwVbw9bOjg2F2BQRa9OkG7Di2W/geclPZNlcQTwxbzn1nEDI2ane2AubTdTd6gCvw==
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/csv-stringify/-/csv-stringify-5.5.0.tgz#0bdeaaf60d6e15b89c752a0eceb4b4c2c8af5a8a"
+  integrity sha512-G05575DSO/9vFzQxZN+Srh30cNyHk0SM0ePyiTChMD5WVt7GMTVPBQf4rtgMF6mqhNCJUPw4pN8LDe8MF9EYOA==
 
 csv@^5.1.3:
   version "5.3.2"
@@ -448,9 +448,9 @@ entities@^1.1.1, entities@~1.1.1:
   integrity sha512-f2LZMYl1Fzu7YSBKg+RoROelpOaNrcGmE9AZubeDfrCEia483oW4MI4VyFd5VNHIgQ/7qm1I0wUHK1eJnn2y2w==
 
 entities@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/entities/-/entities-2.0.0.tgz#68d6084cab1b079767540d80e56a39b423e4abf4"
-  integrity sha512-D9f7V0JSRwIxlRI2mjMqufDrRDnx8p+eEOz7aUM9SuvF8gsBzra0/6tbjl1m8eQHrZlYj6PxqE00hZ1SAIKPLw==
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/entities/-/entities-2.0.2.tgz#ac74db0bba8d33808bbf36809c3a5c3683531436"
+  integrity sha512-dmD3AvJQBUjKpcNkoqr+x+IF0SdRtPz9Vk0uTy4yWqga9ibB6s4v++QFWNohjiUGoMlF552ZvNyXDxz5iW0qmw==
 
 env-variable@0.0.x:
   version "0.0.6"
@@ -859,9 +859,9 @@ mixme@^0.3.1:
   integrity sha512-SyV9uPETRig5ZmYev0ANfiGeB+g6N2EnqqEfBbCGmmJ6MgZ3E4qv5aPbnHVdZ60KAHHXV+T3sXopdrnIXQdmjQ==
 
 mkdirp-classic@^0.5.2:
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/mkdirp-classic/-/mkdirp-classic-0.5.2.tgz#54c441ce4c96cd7790e10b41a87aa51068ecab2b"
-  integrity sha512-ejdnDQcR75gwknmMw/tx02AuRs8jCtqFoFqDZMjiNxsu85sRIJVXDKHuLYvUUPRBUtV2FpSZa9bL1BUa3BdR2g==
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/mkdirp-classic/-/mkdirp-classic-0.5.3.tgz#fa10c9115cc6d8865be221ba47ee9bed78601113"
+  integrity sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==
 
 mkdirp@^0.5.1:
   version "0.5.5"
@@ -870,10 +870,10 @@ mkdirp@^0.5.1:
   dependencies:
     minimist "^1.2.5"
 
-mongodb@3.5.6:
-  version "3.5.6"
-  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-3.5.6.tgz#a1be2d9796c8a8a5b0e6bcbc6baaaa406bd5c0d5"
-  integrity sha512-sh3q3GLDLT4QmoDLamxtAECwC3RGjq+oNuK1ENV8+tnipIavss6sMYt77hpygqlMOCt0Sla5cl7H4SKCVBCGEg==
+mongodb@3.5.7:
+  version "3.5.7"
+  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-3.5.7.tgz#6dcfff3bdbf67a53263dcca1647c265eea1d065d"
+  integrity sha512-lMtleRT+vIgY/JhhTn1nyGwnSMmJkJELp+4ZbrjctrnBxuLbj6rmLuJFz8W2xUzUqWmqoyVxJLYuC58ZKpcTYQ==
   dependencies:
     bl "^2.2.0"
     bson "^1.1.4"
@@ -889,13 +889,13 @@ mongoose-legacy-pluralize@1.0.2:
   integrity sha512-Yo/7qQU4/EyIS8YDFSeenIvXxZN+ld7YdV9LqFVQJzTLye8unujAWPZ4NWKfFA+RNjh+wvTWKY9Z3E5XM6ZZiQ==
 
 mongoose@^5.9.10:
-  version "5.9.10"
-  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-5.9.10.tgz#e0f0e5e2f14fac1fe219123515630eba165f27bc"
-  integrity sha512-w1HNukfJzzDLfcI1f79h2Wj4ogVbf+X8hRkyFgqlcjK7OnDlAgahjDMIsT+mCS9jKojrMhjSsZIs9FiRPkLqMg==
+  version "5.9.13"
+  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-5.9.13.tgz#fa4af761a0b1d10471daa23aafcc775b04b6db42"
+  integrity sha512-MsFdJAaCTVbDA3gYskUEpUN1kThL7sp4zh8N9rGt0+9vYMn28q92NLK90vGssM9qjOGWp8HqLeT1fBgfMZDnKA==
   dependencies:
     bson "^1.1.4"
     kareem "2.3.1"
-    mongodb "3.5.6"
+    mongodb "3.5.7"
     mongoose-legacy-pluralize "1.0.2"
     mpath "0.7.0"
     mquery "3.2.2"
@@ -931,7 +931,7 @@ ms@2.1.2, ms@^2.1.1:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
-nan@^2.14.0:
+nan@^2.14.1:
   version "2.14.1"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.1.tgz#d7be34dfa3105b91494c3147089315eff8874b01"
   integrity sha512-isWHgVjnFjh2x2yuJ/tj3JbwoHu3UC2dX5G/88Cm24yB6YopVgxvBObDY7n5xW6ExmFhJpSEQqFPvq9zaXc8Jw==
@@ -1178,9 +1178,9 @@ safe-buffer@5.1.2, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   integrity sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
 
 safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@^5.1.2, safe-buffer@~5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.2.0.tgz#b74daec49b1148f88c64b68d49b1e815c1f2f519"
-  integrity sha512-fZEwUGbVl7kouZs1jCdMLdt95hdIv0ZeHg6L7qPeciMZhZ+/gdesW4wgTARkrFWEpspjEATAzUGPG8N2jJiwbg==
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.2.1.tgz#1eaf9fa9bdb1fdd4ec75f58f9cdb4e6b7827eec6"
+  integrity sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==
 
 safer-buffer@^2.0.2, safer-buffer@^2.1.0, safer-buffer@~2.1.0:
   version "2.1.2"
@@ -1285,9 +1285,9 @@ stream-json@^1.5.0:
     stream-chain "^2.2.1"
 
 stream-transform@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/stream-transform/-/stream-transform-2.0.1.tgz#112ef2b4d8b9b517f9a6994b0bf7b946fa4d51bc"
-  integrity sha512-GiTcO/rRvZP2R8WPwxmxCFP+Of1yIATuFAmYkvSLDfcD93X2WHiPwdgIqeFT2CvL1gyAsjQvu1nB6RDNQ5b2jw==
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/stream-transform/-/stream-transform-2.0.2.tgz#3cb7a14c802eb39bc40caaab0535e584f3a65caf"
+  integrity sha512-J+D5jWPF/1oX+r9ZaZvEXFbu7znjxSkbNAHJ9L44bt/tCVuOEWZlDqU9qJk7N2xBU1S+K2DPpSKeR/MucmCA1Q==
   dependencies:
     mixme "^0.3.1"
 
@@ -1376,9 +1376,9 @@ strip-json-comments@~2.0.1:
   integrity sha1-PFMZQukIwml8DsNEhYwobHygpgo=
 
 tar-fs@^2.0.0:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/tar-fs/-/tar-fs-2.0.1.tgz#e44086c1c60d31a4f0cf893b1c4e155dabfae9e2"
-  integrity sha512-6tzWDMeroL87uF/+lin46k+Q+46rAJ0SyPGz7OW7wTgblI273hsBqk2C1j0/xNadNLKDTUL9BukSjB7cwgmlPA==
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tar-fs/-/tar-fs-2.1.0.tgz#d1cdd121ab465ee0eb9ccde2d35049d3f3daf0d5"
+  integrity sha512-9uW5iDvrIMCVpvasdFHW0wJPez0K4JnMZtsuIeDI7HyMGJNxmDZDOCQROr7lXyS+iL/QMpj07qcjGYTSdRFXUg==
   dependencies:
     chownr "^1.1.1"
     mkdirp-classic "^0.5.2"
